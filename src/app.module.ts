@@ -2,9 +2,10 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { GraphQLModule } from '@nestjs/graphql';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { RestaurantsModule } from './restaurants/restaurants.module';
 import * as Joi from 'joi';
-import { Restaurant } from './restaurants/entities/restaurant.entity';
+import { UsersModule } from './users/users.module';
+import { CommonModule } from './common/common.module';
+import { User } from './users/entities/user.entity';
 
 @Module({
   imports: [
@@ -24,7 +25,6 @@ import { Restaurant } from './restaurants/entities/restaurant.entity';
     GraphQLModule.forRoot({
       autoSchemaFile: true, //스키마 파일을 메모리에서 관리
     }),
-    RestaurantsModule,
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env.DB_HOST,
@@ -34,8 +34,10 @@ import { Restaurant } from './restaurants/entities/restaurant.entity';
       database: process.env.DB_NAME,
       synchronize: process.env.NODE_ENV !== 'prod', //모듈과 DB 동기화
       logging: process.env.NODE_ENV !== 'prod',
-      entities: [Restaurant], //자동으로 DB에 생성
+      entities: [User], //자동으로 DB에 생성
     }),
+    UsersModule,
+    CommonModule,
   ],
   controllers: [],
   providers: [],

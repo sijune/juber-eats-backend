@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { CreateRestaurantDto } from './dtos/create-restaurant.dto';
 import { Restaurant } from './entities/restaurant.entity';
+import { UpdateRestaurantDto } from './dtos/update-restaurant.dto';
 
 @Injectable()
 export class RestaurantService {
@@ -21,5 +22,9 @@ export class RestaurantService {
     //create or save
     const newRestaurant = this.restaurants.create(createRestaurantDto); //create: DB가 아니라 인스턴스 생성(메모리에만 생성)
     return this.restaurants.save(newRestaurant); //실제 DB저장
+  }
+
+  updateRestaurant({ id, data }: UpdateRestaurantDto) {
+    this.restaurants.update(id, { ...data }); //id가 있는지 체크를 안함
   }
 }
