@@ -5,12 +5,16 @@ import { User } from './entities/user.entity';
 import { CreateAccountInput } from './dtos/create-account.dto';
 import { LoginInput } from './dtos/login.dto';
 import * as bcrypt from 'bcrypt';
+import * as jwt from 'jsonwebtoken';
+import { ConfigService } from '@nestjs/config';
+import { JwtService } from '../jwt/jwt.service';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
     private readonly users: Repository<User>,
+    private readonly jwtService: JwtService,
   ) {}
 
   //반환 값을 [] 또는 {}에 담아서 resolver로 보낼 수 있다. (가독성이 더 좋다.)
@@ -50,9 +54,10 @@ export class UsersService {
           error: 'Wrong password',
         };
       }
+      const token = this.jwtService.sign(user.id);
       return {
         ok: true,
-        token: 'asasasasas',
+        token,
       };
     } catch (error) {
       return {
@@ -62,5 +67,9 @@ export class UsersService {
     }
 
     //JWT를 유저에게 부여
+  }
+
+  async findById(id: number): Promise<User> {
+    return this.users.findOne({ id });
   }
 }
