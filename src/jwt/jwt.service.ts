@@ -3,14 +3,12 @@ import { CONFIG_OPTIONS } from './jwt.constants';
 import { JwtModuleOptions } from './jwt.interfaces';
 import * as jwt from 'jsonwebtoken';
 
-@Injectable()
+@Injectable() //설정되어 있어야 한다.
 export class JwtService {
   constructor(
     @Inject(CONFIG_OPTIONS)
     private readonly options: JwtModuleOptions,
-  ) {
-    console.log(options);
-  }
+  ) {}
 
   sign(userId: number): string {
     return jwt.sign({ id: userId }, this.options.privateKey);

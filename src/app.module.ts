@@ -9,6 +9,7 @@ import { User } from './users/entities/user.entity';
 import { JwtModule } from './jwt/jwt.module';
 import { JwtMiddleware } from './jwt/jwt.middleware';
 import { AuthModule } from './auth/auth.module';
+import { Verification } from './users/entities/verification.entity';
 
 @Module({
   imports: [
@@ -39,7 +40,7 @@ import { AuthModule } from './auth/auth.module';
       database: process.env.DB_NAME,
       synchronize: process.env.NODE_ENV !== 'prod', //모듈과 DB 동기화
       logging: process.env.NODE_ENV !== 'prod',
-      entities: [User], //자동으로 DB에 생성
+      entities: [User, Verification], //자동으로 DB에 생성
     }),
     UsersModule,
     JwtModule.forRoot({
