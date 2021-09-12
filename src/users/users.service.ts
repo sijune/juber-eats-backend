@@ -12,6 +12,7 @@ import { EditProfileInput, EditProfileOutput } from './dtos/edit-profile.dto';
 import { Verification } from './entities/verification.entity';
 import { UserProfileOutput } from './dtos/user-profile.dto';
 import { VerifiyEmailOutput } from './dtos/verify-email.dto';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class UsersService {
@@ -21,6 +22,7 @@ export class UsersService {
     @InjectRepository(Verification)
     private readonly verifications: Repository<Verification>,
     private readonly jwtService: JwtService, //전역으로 설정되어 있으므로 호출 가능
+    private readonly mailService: MailService,
   ) {}
 
   //반환 값을 [] 또는 {}에 담아서 resolver로 보낼 수 있다. (가독성이 더 좋다.)
@@ -35,11 +37,12 @@ export class UsersService {
 
       //2. 유저 생성(create, save) & 비밀번호 hash & verification code 생성
       const user = await this.users.save(this.users.create({ email, password, role }));
-      await this.verifications.save(
+      const verification = await this.verifications.save(
         this.verifications.create({
           user, //code는 entity에서 insert된다.
         }),
       );
+      this.mailService.sendVerificationEmail(user.email, verification.code);
       return { ok: true };
     } catch (e) {
       //에러
@@ -98,10 +101,13 @@ export class UsersService {
   async editProfile(userId: number, { email, password }: EditProfileInput): Promise<EditProfileOutput> {
     try {
       const user = await this.users.findOne(userId);
+      console.log('############', user, email, password);
       if (email) {
         user.email = email;
         user.verified = false;
-        await this.verifications.save(this.verifications.create({ user }));
+        const verification = await this.verifications.save(this.verifications.create({ user }));
+        console.log('############', verification);
+        this.mailService.sendVerificationEmail(user.email, verification.code);
       }
       if (password) {
         user.password = password;
@@ -123,7 +129,8 @@ export class UsersService {
       const verification = await this.verifications.findOne({ code }, { relations: ['user'] }); //연결된 relation을 가져올때 사용
       if (verification) {
         verification.user.verified = true;
-        this.users.save(verification.user); //verified 변경
+        await this.users.save(verification.user); //verified 변경
+        await this.verifications.delete(verification.id); //verification 삭제
         return { ok: true };
       }
       return { ok: false, error: 'Verification not found' };
