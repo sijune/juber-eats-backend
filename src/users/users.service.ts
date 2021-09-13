@@ -53,7 +53,7 @@ export class UsersService {
   async login({ email, password }: LoginInput): Promise<LoginOutput> {
     try {
       //1. email 찾기
-      const user = await this.users.findOne({ email }, { select: ['id', 'password'] }); //entity에 제외된 password를 DB로부터 가져온다.
+      const user = await this.users.findOne({ email }, { select: ['id', 'password'] }); //select: 어떤 칼럼을 가져오고 싶은지, entity에 제외된 password를 DB로부터 가져온다.
       console.log(user);
       if (!user) {
         return {
