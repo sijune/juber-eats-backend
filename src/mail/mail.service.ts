@@ -19,7 +19,7 @@ export class MailService {
   //   -F text='Testing some Mailgun awesomeness!'
 
   //   -F : Form
-  private async sendEmail(subject: string, template: string, emailVars: EmailVar[]) {
+  async sendEmail(subject: string, template: string, emailVars: EmailVar[]): Promise<boolean> {
     const form = new FormData();
     form.append('from', `Sijune from Juber Eats <mailgun@${this.options.domain}>`);
     form.append('to', `sijune0525@gmail.com`);
@@ -27,15 +27,15 @@ export class MailService {
     form.append('template', template); //template 사용
     emailVars.forEach((eVar) => form.append(`v:${eVar.key}`, eVar.value));
     try {
-      const response = await got(`https://api.mailgun.net/v3/${this.options.domain}/messages`, {
-        method: 'POST',
+      const response = await got.post(`https://api.mailgun.net/v3/${this.options.domain}/messages`, {
         headers: {
           Authorization: `Basic ${Buffer.from(`api:${this.options.apiKey}`).toString('base64')}`, //인증방식 룰(헤더)
         },
         body: form,
       });
+      return true;
     } catch (error) {
-      console.log(error);
+      return false;
     }
   }
 

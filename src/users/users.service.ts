@@ -37,6 +37,7 @@ export class UsersService {
 
       //2. 유저 생성(create, save) & 비밀번호 hash & verification code 생성
       const user = await this.users.save(this.users.create({ email, password, role }));
+      //실제 insert 또는 update 할때 code 생성
       const verification = await this.verifications.save(
         this.verifications.create({
           user, //code는 entity에서 insert된다.
@@ -85,13 +86,11 @@ export class UsersService {
 
   async findById(id: number): Promise<UserProfileOutput> {
     try {
-      const user = await this.users.findOne({ id });
-      if (user) {
-        return {
-          ok: true,
-          user,
-        };
-      }
+      const user = await this.users.findOneOrFail({ id });
+      return {
+        ok: true,
+        user,
+      };
     } catch (error) {
       return { ok: false, error: 'User Not Found' };
     }
@@ -101,17 +100,17 @@ export class UsersService {
   async editProfile(userId: number, { email, password }: EditProfileInput): Promise<EditProfileOutput> {
     try {
       const user = await this.users.findOne(userId);
-      console.log('############', user, email, password);
+
       if (email) {
         user.email = email;
         user.verified = false;
         const verification = await this.verifications.save(this.verifications.create({ user }));
-        console.log('############', verification);
         this.mailService.sendVerificationEmail(user.email, verification.code);
       }
       if (password) {
         user.password = password;
       }
+
       await this.users.save(user); //update는 단순히 쿼리를 전달하기만 한다.(비밀번호 hash에 문제), save를 사용해야 entity를 업데이트 하며 entity내 hash기능 사용가능
       return {
         ok: true,
@@ -135,7 +134,7 @@ export class UsersService {
       }
       return { ok: false, error: 'Verification not found' };
     } catch (error) {
-      return { ok: false, error };
+      return { ok: false, error: 'Could not verify email' };
     }
   }
 }
