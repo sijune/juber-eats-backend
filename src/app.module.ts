@@ -19,7 +19,7 @@ import { MailModule } from './mail/mail.module';
       envFilePath: process.env.NODE_ENV === 'dev' ? '.env.dev' : '.env.test', //NODE_ENV를 package.json에 설정해야 한다.
       ignoreEnvFile: process.env.NODE_ENV === 'prod',
       validationSchema: Joi.object({
-        NODE_ENV: Joi.string().valid('dev', 'prod').required(),
+        NODE_ENV: Joi.string().valid('dev', 'prod', 'test').required(),
         DB_HOST: Joi.string().required(),
         DB_PORT: Joi.string().required(),
         DB_USERNAME: Joi.string().required(),
@@ -43,7 +43,7 @@ import { MailModule } from './mail/mail.module';
       password: process.env.DB_PASSWORD,
       database: process.env.DB_NAME,
       synchronize: process.env.NODE_ENV !== 'prod', //모듈과 DB 동기화
-      logging: process.env.NODE_ENV !== 'prod',
+      logging: process.env.NODE_ENV !== 'prod' && process.env.NODE_ENV !== 'test', //test할 때 logging을 보고 싶지 않다.
       entities: [User, Verification], //자동으로 DB에 생성
     }),
     UsersModule,

@@ -55,7 +55,6 @@ export class UsersService {
     try {
       //1. email 찾기
       const user = await this.users.findOne({ email }, { select: ['id', 'password'] }); //select: 어떤 칼럼을 가져오고 싶은지, entity에 제외된 password를 DB로부터 가져온다.
-      console.log(user);
       if (!user) {
         return {
           ok: false,
@@ -104,6 +103,11 @@ export class UsersService {
       if (email) {
         user.email = email;
         user.verified = false;
+        await this.verifications.delete({
+          user: {
+            id: user.id,
+          },
+        });
         const verification = await this.verifications.save(this.verifications.create({ user }));
         this.mailService.sendVerificationEmail(user.email, verification.code);
       }
