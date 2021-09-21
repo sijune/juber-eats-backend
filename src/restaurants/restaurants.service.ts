@@ -63,6 +63,7 @@ export class RestaurantService {
       if (updateRestaurantInput.categoryName) {
         category = await this.categories.getOrCreate(updateRestaurantInput.categoryName);
       }
+      // 업데이트시 save 인자로 배열을 준다.
       await this.restaurants.save([
         {
           id: updateRestaurantInput.restaurantId,
