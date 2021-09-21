@@ -9,6 +9,7 @@ import { AuthUser } from 'src/auth/auth-user.decorator';
 import { UserProfileInput, UserProfileOutput } from './dtos/user-profile.dto';
 import { EditProfileOutput, EditProfileInput } from './dtos/edit-profile.dto';
 import { VerifiyEmailOutput, VerifyEmailInput } from './dtos/verify-email.dto';
+import { Role } from '../auth/role.decorator';
 
 @Resolver((of) => User)
 export class UsersResolver {
@@ -25,19 +26,19 @@ export class UsersResolver {
   }
 
   @Query((returns) => User)
-  @UseGuards(AuthGuard)
+  @Role(['Any'])
   me(@AuthUser() authUser: User) {
     return authUser;
   }
 
   @Query((returns) => UserProfileOutput)
-  @UseGuards(AuthGuard)
+  @Role(['Any'])
   async userProfile(@Args() userProfileInput: UserProfileInput): Promise<UserProfileOutput> {
     return await this.usersService.findById(userProfileInput.userId);
   }
 
   @Mutation((returns) => EditProfileOutput)
-  @UseGuards(AuthGuard)
+  @Role(['Any'])
   async editProfile(
     @AuthUser() authUser: User, //로그인한 유저만 호출가능
     @Args('input') editProfileInput: EditProfileInput,

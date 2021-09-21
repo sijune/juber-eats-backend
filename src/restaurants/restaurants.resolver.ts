@@ -1,6 +1,9 @@
 import { Args, Mutation, Query, Resolver } from '@nestjs/graphql';
-import { CreateRestaurantDto } from './dtos/create-restaurant.dto';
-import { UpdateRestaurantDto } from './dtos/update-restaurant.dto';
+import { AuthUser } from 'src/auth/auth-user.decorator';
+import { Role } from 'src/auth/role.decorator';
+import { User, UserRole } from 'src/users/entities/user.entity';
+import { CreateRestaurantInput, CreateRestaurantOutput } from './dtos/create-restaurant.dto';
+import { UpdateRestaurantOutput, UpdateRestaurantInput } from './dtos/update-restaurant.dto';
 import { Restaurant } from './entities/restaurant.entity';
 import { RestaurantService } from './restaurants.service';
 
@@ -8,38 +11,21 @@ import { RestaurantService } from './restaurants.service';
 export class RestaurantsResolver {
   constructor(private readonly restaurantService: RestaurantService) {}
 
-  @Query((returns) => [Restaurant]) //graphql 영역
-  restaurants(): Promise<Restaurant[]> {
-    // ts 영역
-    return this.restaurantService.getAll();
-  }
-
-  @Mutation((returns) => Boolean)
+  @Mutation((returns) => CreateRestaurantOutput)
+  @Role(['Owner']) //metadata에 값을 넣는다.
   async createRestaurant(
-    //try catch를 사용하기 위해 async 부여
-    @Args('input') //@InputType 사용시 파라미터명을 정의해야한다.
-    createRestaurantDto: CreateRestaurantDto,
-  ): Promise<boolean> {
-    try {
-      await this.restaurantService.createRestaurant(createRestaurantDto);
-      return true;
-    } catch (e) {
-      console.log(e);
-      return false;
-    }
+    @AuthUser() authUser: User, //restaurant 생성 시 참조하기 위해서
+    @Args('input') createRestaurantInput: CreateRestaurantInput,
+  ): Promise<CreateRestaurantOutput> {
+    return this.restaurantService.createRestaurant(authUser, createRestaurantInput);
   }
 
-  @Mutation((returns) => Boolean)
+  @Mutation((returns) => UpdateRestaurantOutput)
+  @Role(['Owner']) //metadata에 값을 넣는다.
   async updateRestaurant(
-    @Args('input')
-    updateRestaurantDto: UpdateRestaurantDto,
-  ): Promise<boolean> {
-    try {
-      await this.restaurantService.updateRestaurant(updateRestaurantDto);
-      return true;
-    } catch (e) {
-      console.log(e);
-      return false;
-    }
+    @AuthUser() owner: User, //restaurant 생성 시 참조하기 위해서
+    @Args('input') updateRestaurantInput: UpdateRestaurantInput,
+  ): Promise<CreateRestaurantOutput> {
+    return this.restaurantService.updateRestaurant(owner, updateRestaurantInput);
   }
 }

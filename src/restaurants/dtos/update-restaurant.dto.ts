@@ -1,15 +1,14 @@
-import { ArgsType, Field, InputType, PartialType } from '@nestjs/graphql';
-import { Restaurant } from '../entities/restaurant.entity';
-import { CreateRestaurantDto } from './create-restaurant.dto';
+import { Field, InputType, ObjectType, OmitType, PartialType, PickType } from '@nestjs/graphql';
+import { User } from 'src/users/entities/user.entity';
+import { CoreOutput } from '../../common/dtos/output.dto';
+import { Restaurant } from 'src/restaurants/entities/restaurant.entity';
+import { CreateRestaurantInput } from './create-restaurant.dto';
 
 @InputType()
-class UpdateRestaurantInputType extends PartialType(CreateRestaurantDto) {} //Restaurant로 하면 id도 옵션이 된다.
-
-@InputType()
-export class UpdateRestaurantDto {
+export class UpdateRestaurantInput extends PartialType(CreateRestaurantInput) {
   @Field((type) => Number)
-  id: number;
-
-  @Field((type) => UpdateRestaurantInputType)
-  data: UpdateRestaurantInputType;
+  restaurantId: number;
 }
+
+@ObjectType()
+export class UpdateRestaurantOutput extends CoreOutput {}

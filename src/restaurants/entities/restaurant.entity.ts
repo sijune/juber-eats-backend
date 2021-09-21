@@ -1,39 +1,40 @@
 import { Field, ObjectType, InputType } from '@nestjs/graphql';
-import { IsBoolean, IsOptional, IsString, Length } from 'class-validator';
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { IsString, Length } from 'class-validator';
+import { Column, Entity, ManyToOne, RelationId } from 'typeorm';
+import { Category } from './category.entity';
+import { CoreEntity } from '../../common/entities/core.entity';
+import { User } from 'src/users/entities/user.entity';
 
-@InputType({ isAbstract: true }) //dto 등 확장하는 경우만 사용
+@InputType('RestaurantInputType', { isAbstract: true }) //dto 등 확장하는 경우만 사용, 이름을 지정하지 않으면 entity와 스키마 생성 시 충돌난다.
 @ObjectType() //graphql을 위한 decorator
 @Entity() // typeORM을 위한 decorator
-export class Restaurant {
-  @PrimaryGeneratedColumn()
-  @Field((type) => Number)
-  id: number;
-
+export class Restaurant extends CoreEntity {
   @Field((type) => String)
   @Column()
   @IsString()
   @Length(5)
   name: string;
 
-  @Field((type) => Boolean, { nullable: true }) //graphql
-  @Column({ default: true }) //db
-  @IsBoolean() //dto
-  @IsOptional() //dto
-  isVegan: boolean;
+  @Field((type) => String) //graphql
+  @Column() //db
+  @IsString() //dto
+  coverImg: string;
 
   @Field((type) => String)
   @Column()
   @IsString()
   address: string;
 
-  @Field((type) => String)
-  @Column()
-  @IsString()
-  ownerName: string;
+  //category가 없어도 저장가능하게 엔터티 설정
+  @Field((type) => Category, { nullable: true })
+  @ManyToOne((type) => Category, (category) => category.restaurants, { nullable: true, onDelete: 'SET NULL' }) //db, 첫번째: 적용대상의 타입, 두번째: 첫번째 논리의 역
+  category: Category;
 
-  @Field((type) => String)
-  @Column()
-  @IsString()
-  categoryName: string;
+  @Field((type) => User)
+  @ManyToOne((type) => User, (user) => user.restaurants, { onDelete: 'CASCADE' }) //db, 첫번째: 적용대상의 타입, 두번째: 첫번째 논리의 역
+  owner: User;
+
+  // 조인된 결과값에서 id를 가져올 때 사용하기 위해 선언
+  @RelationId((restaurant: Restaurant) => restaurant.owner)
+  ownerId: number;
 }

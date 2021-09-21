@@ -11,6 +11,9 @@ import { JwtMiddleware } from './jwt/jwt.middleware';
 import { AuthModule } from './auth/auth.module';
 import { Verification } from './users/entities/verification.entity';
 import { MailModule } from './mail/mail.module';
+import { Restaurant } from './restaurants/entities/restaurant.entity';
+import { Category } from './restaurants/entities/category.entity';
+import { RestaurantsModule } from './restaurants/restaurants.module';
 
 @Module({
   imports: [
@@ -44,9 +47,11 @@ import { MailModule } from './mail/mail.module';
       database: process.env.DB_NAME,
       synchronize: process.env.NODE_ENV !== 'prod', //모듈과 DB 동기화
       logging: process.env.NODE_ENV !== 'prod' && process.env.NODE_ENV !== 'test', //test할 때 logging을 보고 싶지 않다.
-      entities: [User, Verification], //자동으로 DB에 생성
+      entities: [User, Verification, Restaurant, Category], //자동으로 DB에 생성
     }),
     UsersModule,
+    RestaurantsModule,
+    AuthModule,
     JwtModule.forRoot({
       privateKey: process.env.PRIVATE_KEY,
     }),
