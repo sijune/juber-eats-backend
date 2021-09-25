@@ -5,6 +5,7 @@ import * as bcrypt from 'bcrypt';
 import { InternalServerErrorException } from '@nestjs/common';
 import { IsBoolean, IsEmail, IsEnum, IsString } from 'class-validator';
 import { Restaurant } from 'src/restaurants/entities/restaurant.entity';
+import { Order } from '../../orders/entities/order.entity';
 
 export enum UserRole {
   Client = 'Client',
@@ -42,6 +43,14 @@ export class User extends CoreEntity {
   @Field((type) => [Restaurant]) //graphql
   @OneToMany((type) => Restaurant, (restaurant) => restaurant.owner) //db, 첫번째: 적용대상의 타입, 두번째: 첫번째 논리의 역
   restaurants: Restaurant[];
+
+  @Field((type) => [Order]) //graphql
+  @OneToMany((type) => Order, (order) => order.customer)
+  orders: Order[];
+
+  @Field((type) => [Order]) //graphql
+  @OneToMany((type) => Order, (order) => order.driver)
+  rides: Order[];
 
   @BeforeInsert()
   @BeforeUpdate()

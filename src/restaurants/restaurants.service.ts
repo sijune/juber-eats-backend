@@ -14,13 +14,19 @@ import { CategoryInput, CategoryOutput } from './dtos/category.dto';
 import { RestaurantsInput, RestaurantsOutput } from './dtos/restaurants.dto';
 import { RestaurantInput, RestaurantOutput } from './dtos/restaurant.dto';
 import { SearchRestaurantInput, SearchRestaurantOutput } from './dtos/search-restaurant.dto';
+import { CreateDishInput, CreateDishOutput } from './dtos/create-dish.dto';
+import { Dish } from './entities/dish.entity';
+import { UpdateDishInput, UpdateDishOutput } from './dtos/update-dish.dto';
+import { DeleteDishInput, DeleteDishOutput } from './dtos/delete-dish.dto';
 
 @Injectable()
-export class RestaurantService {
+export class RestaurantsService {
   constructor(
     @InjectRepository(Restaurant) //entity가 와야한다.
     private readonly restaurants: Repository<Restaurant>,
     private readonly categories: CategoryRepository, //커스터마이징하기 위해 repository 생성 후 사용
+    @InjectRepository(Dish) //entity가 와야한다.
+    private readonly dishes: Repository<Dish>,
   ) {}
 
   async createRestaurant(owner: User, createRestaurantInput: CreateRestaurantInput): Promise<CreateAccountOutput> {
@@ -74,7 +80,7 @@ export class RestaurantService {
         {
           id: updateRestaurantInput.restaurantId,
           ...updateRestaurantInput,
-          ...(category && { category }),
+          ...(category && { category }), //category 값이 있다면 값으로 넘겨준다.
         },
       ]);
       return {
@@ -193,7 +199,7 @@ export class RestaurantService {
   }
   async findRestaurantById({ restaurantId }: RestaurantInput): Promise<RestaurantOutput> {
     try {
-      const restaurant = await this.restaurants.findOne(restaurantId);
+      const restaurant = await this.restaurants.findOne(restaurantId, { relations: ['menu'] }); //menu 까지 가져온다.
       if (!restaurant) {
         return {
           ok: false,
@@ -231,6 +237,96 @@ export class RestaurantService {
       return {
         ok: false,
         error: 'Could not search for restaurants',
+      };
+    }
+  }
+
+  async createDish(owner: User, createDishInput: CreateDishInput): Promise<CreateDishOutput> {
+    try {
+      //1. restaurant 조회
+      const restaurant = await this.restaurants.findOne(createDishInput.restaurantId);
+      if (!restaurant) {
+        return {
+          ok: false,
+          error: 'Restaurant not found',
+        };
+      }
+      //2. 실제 소유주인지 확인
+      if (owner.id !== restaurant.ownerId) {
+        return {
+          ok: false,
+          error: "You can't create dish",
+        };
+      }
+
+      //3. input과 레스토랑 오브젝트를 값으로 넘긴다.
+      await this.dishes.save(this.dishes.create({ ...createDishInput, restaurant }));
+      return {
+        ok: true,
+      };
+    } catch {
+      return {
+        ok: false,
+        error: 'Could not create dish',
+      };
+    }
+  }
+
+  async updateDish(owner: User, updateDishInput: UpdateDishInput): Promise<UpdateDishOutput> {
+    try {
+      const dish = await this.dishes.findOne(updateDishInput.dishId, {
+        relations: ['restaurant'],
+      });
+      if (!dish) {
+        return {
+          ok: false,
+          error: 'Dish not found',
+        };
+      }
+      if (owner.id !== dish.restaurant.ownerId) {
+        return {
+          ok: false,
+          error: "You can't update dish",
+        };
+      }
+      console.log(dish);
+      console.log(updateDishInput);
+      await this.dishes.save([{ id: updateDishInput.dishId, ...updateDishInput }]);
+      return {
+        ok: true,
+      };
+    } catch {
+      return {
+        ok: false,
+        error: 'Could not update dish',
+      };
+    }
+  }
+  async deleteDish(owner: User, deleteDishInput: DeleteDishInput): Promise<DeleteDishOutput> {
+    try {
+      const dish = await this.dishes.findOne(deleteDishInput.dishId, {
+        relations: ['restaurant'],
+      });
+      if (!dish) {
+        return {
+          ok: false,
+          error: 'Dish not found',
+        };
+      }
+      if (owner.id !== dish.restaurant.ownerId) {
+        return {
+          ok: false,
+          error: "You can't delete dish",
+        };
+      }
+      await this.dishes.delete(deleteDishInput.dishId);
+      return {
+        ok: true,
+      };
+    } catch {
+      return {
+        ok: false,
+        error: 'Could not delete dish',
       };
     }
   }

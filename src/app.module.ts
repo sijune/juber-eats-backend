@@ -15,6 +15,9 @@ import { Restaurant } from './restaurants/entities/restaurant.entity';
 import { Category } from './restaurants/entities/category.entity';
 import { RestaurantsModule } from './restaurants/restaurants.module';
 import { Dish } from './restaurants/entities/dish.entity';
+import { OrdersModule } from './orders/orders.module';
+import { Order } from './orders/entities/order.entity';
+import { OrderItem } from './orders/entities/order-item.entity';
 
 @Module({
   imports: [
@@ -48,7 +51,7 @@ import { Dish } from './restaurants/entities/dish.entity';
       database: process.env.DB_NAME,
       synchronize: process.env.NODE_ENV !== 'prod', //모듈과 DB 동기화
       logging: process.env.NODE_ENV !== 'prod' && process.env.NODE_ENV !== 'test', //test할 때 logging을 보고 싶지 않다.
-      entities: [User, Verification, Restaurant, Category, Dish], //자동으로 DB에 생성
+      entities: [User, Verification, Restaurant, Category, Dish, Order, OrderItem], //자동으로 DB에 생성
     }),
     UsersModule,
     RestaurantsModule,
@@ -61,6 +64,7 @@ import { Dish } from './restaurants/entities/dish.entity';
       fromEmail: process.env.MAILGUN_FROM_EMAIL,
       domain: process.env.MAILGUN_DOMAIN_NAME,
     }),
+    OrdersModule,
   ],
   controllers: [],
   providers: [],
