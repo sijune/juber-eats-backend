@@ -39,8 +39,20 @@ import { OrderItem } from './orders/entities/order-item.entity';
       }),
     }),
     GraphQLModule.forRoot({
+      // installSubscriptionHandlers: true, //web socket 기능을 가지기 위해 설정, 그러나 현재 아래방법(subscriptions)으로 변경하여 사용
+      subscriptions: {
+        'subscriptions-transport-ws': {
+          onConnect: (connectionParams: any) => ({
+            token: connectionParams['x-jwt'],
+          }),
+        },
+      },
       autoSchemaFile: true, //스키마 파일을 메모리에서 관리
-      context: ({ req }) => ({ user: req['user'] }),
+      // context: ({ req, connection }) => {
+      //   const TOKEN_KEY = 'x-jwt';
+      //   return { token: req ? req.headers[TOKEN_KEY] : connection.context[TOKEN_KEY] };
+      // },
+      context: ({ req }) => ({ token: req.headers['x-jwt'] }), //http와 ws 따로 설정한다.
     }),
     TypeOrmModule.forRoot({
       type: 'postgres',
@@ -56,6 +68,7 @@ import { OrderItem } from './orders/entities/order-item.entity';
     UsersModule,
     RestaurantsModule,
     AuthModule,
+    CommonModule,
     JwtModule.forRoot({
       privateKey: process.env.PRIVATE_KEY,
     }),
@@ -69,8 +82,10 @@ import { OrderItem } from './orders/entities/order-item.entity';
   controllers: [],
   providers: [],
 })
-export class AppModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer.apply(JwtMiddleware).forRoutes({ path: '/graphql', method: RequestMethod.ALL });
-  }
-}
+export class AppModule {}
+//JwtMiddleware는 http만 처리한다. 따라서 토큰으로 유저 인증하는 부분은 JwtMiddleware에서 AuthGuard로 변경한다.
+// export class AppModule implements NestModule {
+//   configure(consumer: MiddlewareConsumer) {
+//     consumer.apply(JwtMiddleware).forRoutes({ path: '/graphql', method: RequestMethod.ALL });
+//   }
+// }

@@ -1,17 +1,17 @@
 import { CoreEntity } from '../../common/entities/core.entity';
-import { Column, Entity, JoinTable, ManyToMany, ManyToOne } from 'typeorm';
+import { Column, Entity, JoinTable, ManyToMany, ManyToOne, RelationId } from 'typeorm';
 import { Field, Float, InputType, ObjectType, registerEnumType } from '@nestjs/graphql';
 import { User } from '../../users/entities/user.entity';
 import { Restaurant } from '../../restaurants/entities/restaurant.entity';
-import { Dish } from '../../restaurants/entities/dish.entity';
 import { OrderItem } from './order-item.entity';
 import { IsEnum, IsNumber } from 'class-validator';
 
 export enum OrderStatus {
-  Pending = 'Pending',
-  Cooking = 'Cooking',
-  PickedUp = 'PickedUp',
-  Delivered = 'Delivered',
+  Pending = 'Pending', //Client
+  Cooking = 'Cooking', //Owner
+  Cooked = 'Cooked', //Owner
+  PickedUp = 'PickedUp', //Delivery
+  Delivered = 'Delivered', //Delivery
 }
 
 registerEnumType(OrderStatus, { name: 'OrderStatus' });
@@ -24,9 +24,17 @@ export class Order extends CoreEntity {
   @ManyToOne((type) => User, (user) => user.orders, { onDelete: 'SET NULL', nullable: true }) //customer 삭제 시 dish는 그대로 존재
   customer?: User;
 
+  // 조인된 결과값에서 id를 가져올 때 사용하기 위해 선언
+  @RelationId((order: Order) => order.customer)
+  customerId: number;
+
   @Field((type) => User, { nullable: true })
   @ManyToOne((type) => User, (user) => user.rides, { onDelete: 'SET NULL', nullable: true }) //driver 삭제 시 dish는 그대로 존재
   driver?: User;
+
+  // 조인된 결과값에서 id를 가져올 때 사용하기 위해 선언
+  @RelationId((order: Order) => order.driver)
+  driverId: number;
 
   @Field((type) => Restaurant, { nullable: true })
   @ManyToOne((type) => Restaurant, (restaurant) => restaurant.orders, { onDelete: 'SET NULL', nullable: true })
