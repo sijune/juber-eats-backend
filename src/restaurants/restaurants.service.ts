@@ -289,8 +289,6 @@ export class RestaurantsService {
           error: "You can't update dish",
         };
       }
-      console.log(dish);
-      console.log(updateDishInput);
       await this.dishes.save([{ id: updateDishInput.dishId, ...updateDishInput }]);
       return {
         ok: true,

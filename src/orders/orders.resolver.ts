@@ -9,8 +9,10 @@ import { OrdersOutput, OrdersInput } from './dtos/orders.dto';
 import { OrderOutput, OrderInput } from './dtos/order.dto';
 import { UpdateOrderInput, UpdateOrderOutput } from './dtos/update-order.dto';
 import { Inject } from '@nestjs/common';
-import { PUB_SUB, NEW_PENDING_ORDER, NEW_COOKED_ORDER } from '../common/common.constants';
+import { PUB_SUB, NEW_PENDING_ORDER, NEW_COOKED_ORDER, NEW_ORDER_UPDATE } from '../common/common.constants';
 import { PubSub } from 'graphql-subscriptions';
+import { OrderUpdatesInput } from './dtos/order-updates.dto';
+import { TakeOrderInput, TakeOrderOutput } from './dtos/take-order.dto';
 
 @Resolver((of) => Order)
 export class OrdersResolver {
@@ -46,10 +48,11 @@ export class OrdersResolver {
     return this.ordersService.updateOrder(user, updateOrderInput);
   }
 
-  //Owner의 주문 Listening
+  // Subscription
+
+  //Owner의 주문 Listening, 본인 레스토랑 Order만 확인가능
   @Subscription((returns) => Order, {
     filter: ({ pendingOrders: { ownerId } }, _, { user }) => {
-      console.log(ownerId, user.id);
       return ownerId === user.id;
     },
     resolve: ({ pendingOrders: { order } }) => order, //service에서 payload를 변경해줬기 때문에 다시 Order반환하도록 변경
@@ -64,5 +67,31 @@ export class OrdersResolver {
   @Role(['Delivery'])
   cookedOrders() {
     return this.pubsub.asyncIterator(NEW_COOKED_ORDER);
+  }
+
+  //모든 유저 상태값 Listening, Listening중인 Order만 확인 가능
+  @Subscription((returns) => Order, {
+    filter: (
+      { orderUpdates: order }: { orderUpdates: Order },
+      { input }: { input: OrderUpdatesInput },
+      { user }: { user: User },
+    ) => {
+      //user 체크, 관련없는 사람들 필터링
+      if (order.driverId !== user.id && order.customerId !== user.id && order.restaurant.ownerId !== user.id) {
+        return false;
+      }
+      //order 체크, 업데이트되는 order와 sub중인 order가 같은 경우
+      return order.id === input.id;
+    },
+  })
+  @Role(['Any'])
+  orderUpdates(@Args('input') orderUpdatesInput: OrderUpdatesInput) {
+    return this.pubsub.asyncIterator(NEW_ORDER_UPDATE);
+  }
+
+  @Mutation((returns) => TakeOrderOutput)
+  @Role(['Delivery'])
+  takeOrder(@AuthUser() driver: User, @Args('input') takeOrderInput: TakeOrderInput): Promise<TakeOrderOutput> {
+    return this.ordersService.takeOrder(driver, takeOrderInput);
   }
 }

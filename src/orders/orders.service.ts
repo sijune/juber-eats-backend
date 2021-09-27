@@ -11,7 +11,8 @@ import { OrdersOutput, OrdersInput } from './dtos/orders.dto';
 import { OrderOutput, OrderInput } from './dtos/order.dto';
 import { UpdateOrderInput, UpdateOrderOutput } from './dtos/update-order.dto';
 import { PubSub } from 'graphql-subscriptions';
-import { PUB_SUB, NEW_PENDING_ORDER, NEW_COOKED_ORDER } from '../common/common.constants';
+import { PUB_SUB, NEW_PENDING_ORDER, NEW_COOKED_ORDER, NEW_ORDER_UPDATE } from '../common/common.constants';
+import { TakeOrderInput, TakeOrderOutput } from './dtos/take-order.dto';
 
 @Injectable()
 export class OrdersService {
@@ -130,7 +131,6 @@ export class OrdersService {
           orders = orders.filter((order) => order.status === status);
         }
       }
-      console.log(orders);
       return {
         ok: true,
         orders,
@@ -145,7 +145,6 @@ export class OrdersService {
 
   canSeeOrder(user: User, order: Order): boolean {
     let canSee = true;
-    console.log(user, order);
     if (user.role === UserRole.Client && user.id !== order.customerId) {
       //유저가 손님이지만 && request유저id와 저장된 손님id가 다른경우
       canSee = false;
@@ -189,7 +188,7 @@ export class OrdersService {
 
   async updateOrder(user: User, { id: orderId, status }: UpdateOrderInput): Promise<UpdateOrderOutput> {
     try {
-      const order = await this.orders.findOne(orderId, { relations: ['restaurant'] });
+      const order = await this.orders.findOne(orderId);
       if (!order) {
         return {
           ok: false,
@@ -233,14 +232,17 @@ export class OrdersService {
           status,
         },
       ]);
-      //레스토랑 주인 음식 완료 시 COOKED 업데이트
+      const newOrder = { ...order, status }; //update의 save는 order 전체를 받지 않는다. 따라서 조회한 값과 변경한 값을 함께 반환한다.
+      //레스토랑 주인 음식 완료 시 COOKED 업데이트 --> Delivery에게 전송
       if (user.role === UserRole.Owner) {
         if (status === OrderStatus.Cooked) {
           await this.pubsub.publish(NEW_COOKED_ORDER, {
-            cookedOrders: { ...order, status },
+            cookedOrders: newOrder,
           });
         }
       }
+      //업데이트마다 -> 전부에게 전송
+      await this.pubsub.publish(NEW_ORDER_UPDATE, { orderUpdates: newOrder });
       return {
         ok: true,
       };
@@ -248,6 +250,40 @@ export class OrdersService {
       return {
         ok: false,
         error: 'Could not update order',
+      };
+    }
+  }
+
+  async takeOrder(driver: User, { id: orderId }: TakeOrderInput): Promise<TakeOrderOutput> {
+    try {
+      const order = await this.orders.findOne(orderId); //eager relation
+      if (!order) {
+        return {
+          ok: false,
+          error: 'Order not found',
+        };
+      }
+      //이미 있다면 배정받은 것이므로 에러
+      if (order.driver) {
+        return {
+          ok: false,
+          error: 'This order already has a driver',
+        };
+      }
+      await this.orders.save([
+        {
+          id: orderId,
+          driver,
+        },
+      ]);
+      await this.pubsub.publish(NEW_ORDER_UPDATE, { orderUpdates: { ...order, driver } });
+      return {
+        ok: true,
+      };
+    } catch {
+      return {
+        ok: false,
+        error: 'Could not update order.',
       };
     }
   }

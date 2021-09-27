@@ -21,7 +21,7 @@ registerEnumType(OrderStatus, { name: 'OrderStatus' });
 @Entity() // typeORM을 위한 decorator
 export class Order extends CoreEntity {
   @Field((type) => User, { nullable: true })
-  @ManyToOne((type) => User, (user) => user.orders, { onDelete: 'SET NULL', nullable: true }) //customer 삭제 시 dish는 그대로 존재
+  @ManyToOne((type) => User, (user) => user.orders, { onDelete: 'SET NULL', nullable: true, eager: true }) //customer 삭제 시 dish는 그대로 존재
   customer?: User;
 
   // 조인된 결과값에서 id를 가져올 때 사용하기 위해 선언
@@ -29,7 +29,7 @@ export class Order extends CoreEntity {
   customerId: number;
 
   @Field((type) => User, { nullable: true })
-  @ManyToOne((type) => User, (user) => user.rides, { onDelete: 'SET NULL', nullable: true }) //driver 삭제 시 dish는 그대로 존재
+  @ManyToOne((type) => User, (user) => user.rides, { onDelete: 'SET NULL', nullable: true, eager: true }) //driver 삭제 시 dish는 그대로 존재
   driver?: User;
 
   // 조인된 결과값에서 id를 가져올 때 사용하기 위해 선언
@@ -37,11 +37,15 @@ export class Order extends CoreEntity {
   driverId: number;
 
   @Field((type) => Restaurant, { nullable: true })
-  @ManyToOne((type) => Restaurant, (restaurant) => restaurant.orders, { onDelete: 'SET NULL', nullable: true })
+  @ManyToOne((type) => Restaurant, (restaurant) => restaurant.orders, {
+    onDelete: 'SET NULL',
+    nullable: true,
+    eager: true, //eager relation, 조회될 때마다 relation되어 조회된다.
+  })
   restaurant?: Restaurant;
 
   @Field((type) => [OrderItem])
-  @ManyToMany((type) => OrderItem)
+  @ManyToMany((type) => OrderItem, { eager: true })
   @JoinTable() // owning엔터티에 작성한다.
   items: OrderItem[];
 
