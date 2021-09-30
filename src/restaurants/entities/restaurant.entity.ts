@@ -47,4 +47,12 @@ export class Restaurant extends CoreEntity {
   @Field((type) => [Dish]) //graphql
   @OneToMany((type) => Dish, (dish) => dish.restaurant) //db, 첫번째: 적용대상의 타입, 두번째: 첫번째 논리의 역
   menu: Dish[];
+
+  @Field((type) => Boolean)
+  @Column({ default: false }) //저장되어 있는 테스트 케이스로 없으면 에러 발생
+  isPromoted: boolean;
+
+  @Field((type) => Date, { nullable: true })
+  @Column({ nullable: true })
+  promotedUntil: Date;
 }

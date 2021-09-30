@@ -1,4 +1,4 @@
-import { MiddlewareConsumer, Module, NestModule, RequestMethod } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { GraphQLModule } from '@nestjs/graphql';
 import { TypeOrmModule } from '@nestjs/typeorm';
@@ -7,7 +7,6 @@ import { UsersModule } from './users/users.module';
 import { CommonModule } from './common/common.module';
 import { User } from './users/entities/user.entity';
 import { JwtModule } from './jwt/jwt.module';
-import { JwtMiddleware } from './jwt/jwt.middleware';
 import { AuthModule } from './auth/auth.module';
 import { Verification } from './users/entities/verification.entity';
 import { MailModule } from './mail/mail.module';
@@ -18,6 +17,9 @@ import { Dish } from './restaurants/entities/dish.entity';
 import { OrdersModule } from './orders/orders.module';
 import { Order } from './orders/entities/order.entity';
 import { OrderItem } from './orders/entities/order-item.entity';
+import { PaymentsModule } from './payments/payments.module';
+import { Payment } from './payments/entities/payment.entity';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Module({
   imports: [
@@ -63,7 +65,7 @@ import { OrderItem } from './orders/entities/order-item.entity';
       database: process.env.DB_NAME,
       synchronize: process.env.NODE_ENV !== 'prod', //모듈과 DB 동기화
       logging: process.env.NODE_ENV !== 'prod' && process.env.NODE_ENV !== 'test', //test할 때 logging을 보고 싶지 않다.
-      entities: [User, Verification, Restaurant, Category, Dish, Order, OrderItem], //자동으로 DB에 생성
+      entities: [User, Verification, Restaurant, Category, Dish, Order, OrderItem, Payment], //자동으로 DB에 생성
     }),
     UsersModule,
     RestaurantsModule,
@@ -72,12 +74,14 @@ import { OrderItem } from './orders/entities/order-item.entity';
     JwtModule.forRoot({
       privateKey: process.env.PRIVATE_KEY,
     }),
+    ScheduleModule.forRoot(),
     MailModule.forRoot({
       apiKey: process.env.MAILGUN_API_KEY,
       fromEmail: process.env.MAILGUN_FROM_EMAIL,
       domain: process.env.MAILGUN_DOMAIN_NAME,
     }),
     OrdersModule,
+    PaymentsModule,
   ],
   controllers: [],
   providers: [],
