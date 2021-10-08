@@ -29,7 +29,11 @@ export class Restaurant extends CoreEntity {
 
   //category가 없어도 저장가능하게 엔터티 설정
   @Field((type) => Category, { nullable: true })
-  @ManyToOne((type) => Category, (category) => category.restaurants, { nullable: true, onDelete: 'SET NULL' }) //db, 첫번째: 적용대상의 타입, 두번째: 첫번째 논리의 역
+  @ManyToOne((type) => Category, (category) => category.restaurants, {
+    nullable: true,
+    onDelete: 'SET NULL',
+    eager: true,
+  }) //db, 첫번째: 적용대상의 타입, 두번째: 첫번째 논리의 역
   category: Category;
 
   @Field((type) => User)

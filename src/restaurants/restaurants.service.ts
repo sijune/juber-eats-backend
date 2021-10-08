@@ -160,8 +160,8 @@ export class RestaurantsService {
         where: {
           category,
         },
-        take: 25,
-        skip: (page - 1) * 25,
+        take: 3,
+        skip: (page - 1) * 3,
         order: {
           isPromoted: 'DESC',
         },
@@ -171,7 +171,8 @@ export class RestaurantsService {
         ok: true,
         restaurants,
         category,
-        totalPages: Math.ceil(totalResults / 25),
+        totalPages: Math.ceil(totalResults / 3),
+        totalResults,
       };
     } catch {
       return {
@@ -184,8 +185,8 @@ export class RestaurantsService {
   async allRestaurants({ page }: RestaurantsInput): Promise<RestaurantsOutput> {
     try {
       const [restaurants, totalResults] = await this.restaurants.findAndCount({
-        skip: (page - 1) * 25,
-        take: 25,
+        skip: (page - 1) * 3,
+        take: 3,
         order: {
           isPromoted: 'DESC',
         },
@@ -193,7 +194,7 @@ export class RestaurantsService {
       return {
         ok: true,
         results: restaurants,
-        totalPages: Math.ceil(totalResults / 25),
+        totalPages: Math.ceil(totalResults / 3),
         totalResults,
       };
     } catch {
@@ -230,14 +231,14 @@ export class RestaurantsService {
         where: {
           name: Raw((name) => `${name} ILIKE '%${query}%'`), //postgre에서 SQL을 직접사용하는 방법
         },
-        skip: (page - 1) * 25,
-        take: 25,
+        skip: (page - 1) * 3,
+        take: 3,
       });
       return {
         ok: true,
         restaurants,
         totalResults,
-        totalPages: Math.ceil(totalResults / 25),
+        totalPages: Math.ceil(totalResults / 3),
       };
     } catch {
       return {
