@@ -19,6 +19,11 @@ export class Category extends CoreEntity {
   @IsString() //dto
   coverImg: string;
 
+  @Field((type) => String, { nullable: true })
+  @Column({ nullable: true })
+  @IsString()
+  bgImg: string;
+
   @Field((type) => String)
   @Column({ unique: true })
   @IsString()
