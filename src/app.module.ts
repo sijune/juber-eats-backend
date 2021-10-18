@@ -27,9 +27,9 @@ import { UploadsModule } from './uploads/uploads.module';
     ConfigModule.forRoot({
       isGlobal: true, //import 없이 service를 작성하면 자동으로 주입된다.
       envFilePath: process.env.NODE_ENV === 'dev' ? '.env.dev' : '.env.test', //NODE_ENV를 package.json에 설정해야 한다.
-      ignoreEnvFile: process.env.NODE_ENV === 'prod',
+      ignoreEnvFile: process.env.NODE_ENV === 'production',
       validationSchema: Joi.object({
-        NODE_ENV: Joi.string().valid('dev', 'prod', 'test').required(),
+        NODE_ENV: Joi.string().valid('dev', 'production', 'test').required(),
         DB_HOST: Joi.string().required(),
         DB_PORT: Joi.string().required(),
         DB_USERNAME: Joi.string().required(),
