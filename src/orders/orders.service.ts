@@ -59,7 +59,7 @@ export class OrdersService {
               dishFinalPrice = dishFinalPrice + dishOption.extra;
             } else {
               //size인 경우
-              const dishOptionChoice = dishOption.choices.find(
+              const dishOptionChoice = dishOption.choices?.find(
                 (optionChoice) => optionChoice.name === itemOption.choice,
               );
               if (dishOptionChoice) {
@@ -93,8 +93,10 @@ export class OrdersService {
       });
       return {
         ok: true,
+        orderId: order.id,
       };
-    } catch {
+    } catch (e) {
+      console.log(e);
       return {
         ok: false,
         error: 'Could not create order',
