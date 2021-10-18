@@ -44,6 +44,7 @@ import { UploadsModule } from './uploads/uploads.module';
       }),
     }),
     GraphQLModule.forRoot({
+      playground: process.env.NODE_ENV !== 'production',
       // installSubscriptionHandlers: true, //web socket 기능을 가지기 위해 설정, 그러나 현재 아래방법(subscriptions)으로 변경하여 사용
       subscriptions: {
         'subscriptions-transport-ws': {
